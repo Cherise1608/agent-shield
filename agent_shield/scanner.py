@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from agent_shield.checks.secrets import check_secrets
 from agent_shield.checks.audit_logging import check_audit_logging
@@ -37,6 +40,7 @@ def _collect_files(project_path: Path) -> list[Path]:
 def scan_project(project_path: Path, framework: Framework) -> dict[str, Any]:
     """Run all applicable checks and return a structured results dict."""
     files = _collect_files(project_path)
+    logger.info("Scanning %s (%d files)", project_path, len(files))
 
     check_results: list[dict[str, Any]] = []
     for check_fn, check_name in ALL_CHECKS:
@@ -44,6 +48,7 @@ def scan_project(project_path: Path, framework: Framework) -> dict[str, Any]:
         if framework.name != "all" and check_name not in framework.checks:
             continue
         result = check_fn(project_path, files)
+        logger.debug("Check %s: %d/%d", check_name, result["score"], result["max_score"])
         check_results.append(result)
 
     total_score = sum(r["score"] for r in check_results)
@@ -55,6 +60,8 @@ def scan_project(project_path: Path, framework: Framework) -> dict[str, Any]:
     critical = sum(1 for f in all_findings if f["severity"] == "critical")
     warnings = sum(1 for f in all_findings if f["severity"] == "warning")
     passed = sum(1 for f in all_findings if f["severity"] == "pass")
+
+    logger.info("Scan complete: %d/%d (%d%%)", total_score, total_max, pct)
 
     return {
         "project": str(project_path),

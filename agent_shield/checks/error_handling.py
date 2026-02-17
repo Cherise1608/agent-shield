@@ -2,7 +2,7 @@
 import re
 from pathlib import Path
 
-BARE_EXCEPT = re.compile(r'except\s*:')
+BARE_EXCEPT = re.compile(r'^\s*except\s*:', re.MULTILINE)
 BROAD_EXCEPT = re.compile(r'except\s+Exception\s*:')
 
 FALLBACK_PATTERNS = [

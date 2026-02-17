@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from agent_shield import __version__
 from agent_shield.scanner import scan_project
@@ -71,6 +74,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1
 
         framework = get_framework(args.framework)
+        logger.info("Scanning %s with framework '%s'", project_path, framework.name)
         results = scan_project(project_path, framework)
         output = format_results(results, args.output_format)
         print(output)
