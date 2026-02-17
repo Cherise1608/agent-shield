@@ -208,8 +208,7 @@ pip install -e .
 
 [Flux AI](https://fluxai.dk) — Agentic AI with Governance Built In.
 
-Built from real deployments in Danish public sector and enterprise.
-Not theory. Receipts.
+Governance scanning for teams and solo developers shipping AI agents
 
 ## License
 
