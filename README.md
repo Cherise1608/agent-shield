@@ -127,21 +127,20 @@ agent-shield scan .
 ```bash
 agent-shield scan . --framework eu-ai-act
 agent-shield scan . --framework gdpr
-agent-shield scan . --framework iso-42001
+agent-shield scan . --framework owasp-llm
+agent-shield scan . --framework nist-ai-rmf
 ```
 
 ### Output formats
 ```bash
+agent-shield scan . --format text        # Default
 agent-shield scan . --format json        # Machine-readable
 agent-shield scan . --format markdown    # For docs/reports
-agent-shield scan . --format terminal    # Default, colored output
 ```
 
 ### CI/CD integration
-```bash
-# Fail pipeline if score is below threshold
-agent-shield scan . --min-score 60 --exit-code
-```
+
+The CLI exits with code `1` if the score is below 70%, so it works as a pipeline gate out of the box.
 
 #### GitHub Actions example
 ```yaml
@@ -157,12 +156,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install agent-shield
-      - run: agent-shield scan . --min-score 60 --exit-code
-```
-
-### Generate fix report
-```bash
-agent-shield scan . --report fixes.md
+      - run: agent-shield scan . --framework eu-ai-act --format json
 ```
 
 ## Regulatory mapping
@@ -179,7 +173,7 @@ Each finding includes the specific article reference and a concrete fix suggesti
 **v0.1** — Static scanner (current)
 - Repo scanning with governance scoring
 - EU AI Act and GDPR framework mapping
-- CLI with terminal, JSON, and markdown output
+- CLI with text, JSON, and markdown output
 
 **v0.2** — Fix guide & runtime monitor
 - `--fix-guide` flag generating actionable fix instructions with code snippets
