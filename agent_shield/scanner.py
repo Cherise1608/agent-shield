@@ -28,11 +28,15 @@ ALL_CHECKS = [
 ]
 
 
+EXCLUDED_DIRS = {"node_modules", "__pycache__", "dist", "build", ".venv", "venv", ".tox", ".mypy_cache"}
+
+
 def _collect_files(project_path: Path) -> list[Path]:
-    """Collect all non-hidden files in the project tree."""
+    """Collect all non-hidden, non-vendored files in the project tree."""
     files: list[Path] = []
     for item in project_path.rglob("*"):
-        if item.is_file() and not any(p.startswith(".") for p in item.relative_to(project_path).parts):
+        parts = item.relative_to(project_path).parts
+        if item.is_file() and not any(p.startswith(".") or p in EXCLUDED_DIRS for p in parts):
             files.append(item)
     return files
 
