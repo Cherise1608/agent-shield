@@ -69,6 +69,10 @@ def check_art22_accountability(project_path: Path, files: list[Path]) -> dict:
     for f in files:
         if f.suffix not in CONFIG_EXTENSIONS:
             continue
+        if (f.name.startswith("test_") or f.name.endswith("_test.py")
+                or f.name.endswith("_mock.py") or f.name == "conftest.py"
+                or "fixtures" in f.relative_to(project_path).parts):
+            continue
         try:
             content = f.read_text(errors="ignore")
         except Exception:
@@ -81,6 +85,10 @@ def check_art22_accountability(project_path: Path, files: list[Path]) -> dict:
     # --- Scan code files ---
     for f in files:
         if f.suffix not in code_extensions:
+            continue
+        if (f.name.startswith("test_") or f.name.endswith("_test.py")
+                or f.name.endswith("_mock.py") or f.name == "conftest.py"
+                or "fixtures" in f.relative_to(project_path).parts):
             continue
         try:
             content = f.read_text(errors="ignore")
