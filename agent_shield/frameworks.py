@@ -27,6 +27,8 @@ FRAMEWORKS: dict[str, Framework] = {
             "check_error_handling",
             "check_documentation",
             "check_data_classification",
+            "check_art14_human_oversight",
+            "check_art22_accountability",
         ],
     ),
     "gdpr": Framework(
@@ -37,6 +39,7 @@ FRAMEWORKS: dict[str, Framework] = {
             "check_data_classification",
             "check_audit_logging",
             "check_documentation",
+            "check_art22_accountability",
         ],
     ),
     "owasp-llm": Framework(
@@ -59,6 +62,8 @@ FRAMEWORKS: dict[str, Framework] = {
             "check_documentation",
             "check_data_classification",
             "check_secrets",
+            "check_art14_human_oversight",
+            "check_art22_accountability",
         ],
     ),
 }

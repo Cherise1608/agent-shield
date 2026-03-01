@@ -107,14 +107,29 @@ Your agent project either passes an audit or it doesn't.
 - Risk assessment or DPIA references
 - Deployment and rollback procedures
 
+### ⚖️ Art. 14 Human Oversight — Automated Decisions (15 points)
+- LLM output used directly in decision conditionals without human validation
+- Auto-approve / auto-execute functions with no human review companion
+- Agent output piped directly to system actions (DB writes, API calls, emails)
+- Automated decision paths with no human checkpoint
+
+### 📋 Art. 22 Accountability (15 points)
+- Agent/tool configs with no owner or responsible_party declared
+- Multi-agent orchestration with no escalation path or fallback handler
+- Silent error handlers on agent decision paths (except: pass)
+- Agent output to external systems with no schema or type validation
+- No audit trail (timestamp, agent_id, input/output hash, decision rationale)
+
 ## Scoring
 
 | Score | Rating | Meaning |
 |-------|--------|---------|
-| 80-100 | ✅ Governance Ready | Production-ready with governance controls |
-| 60-79 | 🔶 Partially Governed | Key controls in place, gaps remain |
-| 40-59 | ⚠️ Exposed | Significant governance gaps |
-| 0-39 | 🔴 Critical Exposure | Not ready for production deployment |
+| 80-100% | ✅ Governance Ready | Production-ready with governance controls |
+| 60-79% | 🔶 Partially Governed | Key controls in place, gaps remain |
+| 40-59% | ⚠️ Exposed | Significant governance gaps |
+| 0-39% | 🔴 Critical Exposure | Not ready for production deployment |
+
+Total possible score: **130 points** across 8 check categories.
 
 ## Usage
 
@@ -163,8 +178,8 @@ jobs:
 
 agent-shield maps findings directly to regulatory articles:
 
-- **EU AI Act** — Articles 9 (Risk Management), 11 (Technical Documentation), 12 (Record-Keeping), 13 (Transparency), 14 (Human Oversight), 15 (Robustness)
-- **GDPR** — Articles 5 (Processing Principles), 22 (Automated Decision-Making), 25 (Data Protection by Design), 32 (Security), 35 (DPIA)
+- **EU AI Act** — Articles 9 (Risk Management), 11 (Technical Documentation), 12 (Record-Keeping), 13 (Transparency), 14 (Human Oversight), 15 (Robustness), 22 (Accountability)
+- **GDPR** — Articles 5 (Processing Principles), 5(2) (Accountability), 22 (Automated Decision-Making), 25 (Data Protection by Design), 32 (Security), 35 (DPIA)
 
 Each finding includes the specific article reference and a concrete fix suggestion.
 

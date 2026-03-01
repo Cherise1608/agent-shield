@@ -14,6 +14,8 @@ from agent_shield.checks.human_oversight import check_human_oversight
 from agent_shield.checks.data_classification import check_data_classification
 from agent_shield.checks.error_handling import check_error_handling
 from agent_shield.checks.documentation import check_documentation
+from agent_shield.checks.art14_human_oversight import check_art14_human_oversight
+from agent_shield.checks.art22_accountability import check_art22_accountability
 from agent_shield.frameworks import Framework
 
 
@@ -25,6 +27,8 @@ ALL_CHECKS = [
     (check_data_classification, "check_data_classification"),
     (check_error_handling, "check_error_handling"),
     (check_documentation, "check_documentation"),
+    (check_art14_human_oversight, "check_art14_human_oversight"),
+    (check_art22_accountability, "check_art22_accountability"),
 ]
 
 
