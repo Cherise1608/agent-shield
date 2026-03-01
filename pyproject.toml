@@ -33,5 +33,9 @@ Homepage = "https://github.com/fluxai-dk/agent-shield"
 Documentation = "https://github.com/fluxai-dk/agent-shield/docs"
 Repository = "https://github.com/fluxai-dk/agent-shield"
 
+[tool.agent-shield]
+responsible_party = "Jesca Martaeng <jesca@fluxai.dk>"
+contact = "https://fluxai.dk"
+
 [tool.setuptools.packages.find]
 where = ["."]
