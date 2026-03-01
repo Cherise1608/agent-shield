@@ -58,6 +58,11 @@ def check_art14_human_oversight(project_path: Path, files: list[Path]) -> dict:
     for f in files:
         if f.suffix not in code_extensions:
             continue
+        # Skip test/mock/fixture files — false positives on agent patterns
+        if (f.name.startswith("test_") or f.name.endswith("_test.py")
+                or f.name.endswith("_mock.py") or f.name == "conftest.py"
+                or "fixtures" in f.relative_to(project_path).parts):
+            continue
         try:
             content = f.read_text(errors="ignore")
         except Exception:
