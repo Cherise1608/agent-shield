@@ -120,6 +120,65 @@ Your agent project either passes an audit or it doesn't.
 - Agent output to external systems with no schema or type validation
 - No audit trail (timestamp, agent_id, input/output hash, decision rationale)
 
+### 🚨 Emergency Mode — Agent Infrastructure Readiness
+
+When your primary platform goes down, your agents don't stop. They keep running — without monitoring, without escalation, without human oversight. That's an EU AI Act Art. 14 violation in real time.
+
+`agent-shield status --emergency` checks whether the governance prerequisites are still intact:
+
+```bash
+agent-shield status --emergency --governance governance.yaml
+```
+
+```
+agent-shield status --emergency
+========================================================
+  Timestamp:    2026-03-27T20:39:57+00:00
+  Governance:   governance.yaml
+  Fail mode:    closed
+
+  Escalation Channels
+  ----------------------------------------
+  [X] human_review         DOWN
+      endpoint: https://hooks.slack.com/services/T00/B00/xxx
+      detail:   Unreachable: Connection refused
+  [X] backup_comms         DOWN
+      endpoint: https://rocketchat.company.com/api/v1/channels.list
+      detail:   Unreachable: No address associated with hostname
+
+  Assessment
+  ----------------------------------------
+  Human oversight available:  NO
+  Governance intact:          NO
+  Action: EMERGENCY — all human oversight channels unreachable.
+          Switch to fail-closed. Halt all autonomous agents.
+
+  Regulatory Impact
+  ----------------------------------------
+  EU AI Act Art. 9: AT RISK — governance prerequisites degraded
+  EU AI Act Art. 14: VIOLATION — human oversight unreachable
+========================================================
+```
+
+Checks HTTP endpoints, TCP sockets, running processes, and file/socket paths. Configure endpoints in `governance.yaml`:
+
+```yaml
+delegation:
+  escalation:
+    - channel: human_review
+      trigger: threshold_reached
+      endpoint: https://hooks.slack.com/services/T00/B00/xxx
+    - channel: backup_comms
+      trigger: primary_down
+      endpoint: https://rocketchat.company.com/api/v1/channels.list
+    - channel: abort
+      trigger: critical_violation
+```
+
+**Exit codes:** `0` = nominal, `1` = degraded, `2` = emergency (no human oversight).
+
+Works with [Airlock](https://github.com/Cherise1608/airlock) governance specs. Answers the question: *"What happens to your AI agents when Teams goes down?"*
+
 ## Scoring
 
 | Score | Rating | Meaning |
@@ -185,17 +244,25 @@ Each finding includes the specific article reference and a concrete fix suggesti
 
 ## Roadmap
 
-**v0.1** — Static scanner (current)
+**v0.1** — Static scanner
 - Repo scanning with governance scoring
 - EU AI Act and GDPR framework mapping
 - CLI with text, JSON, and markdown output
 
-**v0.2** — Fix guide & runtime monitor
-- `--fix-guide` flag generating actionable fix instructions with code snippets
-- Lightweight middleware for agent decision logging
-- Webhook alerts on governance drift
+**v0.2** — Governance reporting (current)
+- Append-only audit ledger with sha256 chain integrity
+- `agent-shield report` — runtime summary (blocked/allowed/drift/escalations)
+- `agent-shield compliance --framework eu-ai-act` — Art. 12/14 compliance
+- `agent-shield compliance --framework gdpr` — Art. 22/35 flags
+- `agent-shield verify` — hash chain integrity verification
 
-**v0.3** — Policy engine
+**v0.3** — Emergency mode (current)
+- `agent-shield status --emergency` — escalation channel health checks
+- HTTP, TCP, process, and file/socket endpoint verification
+- Automatic governance status: NOMINAL / DEGRADED / EMERGENCY
+- EU AI Act Art. 9 and Art. 14 regulatory impact reporting
+
+**v0.4** — Policy engine (next)
 - Declarative permission rules for agents (YAML)
 - Action-level access control
 - Approval workflows for high-risk operations
