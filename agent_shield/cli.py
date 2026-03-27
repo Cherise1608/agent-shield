@@ -21,6 +21,10 @@ from agent_shield.report import (
     verify_chain,
     DEFAULT_REPORT_PATH,
 )
+from agent_shield.emergency import (
+    assess_emergency,
+    format_emergency_text,
+)
 
 
 def _parse_duration(value: str) -> float:
@@ -149,6 +153,31 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"Path to governance-report.json (default: {DEFAULT_REPORT_PATH}).",
     )
 
+    # --- status command ---
+    status_parser = sub.add_parser(
+        "status",
+        help="Check governance health and escalation channel availability.",
+    )
+    status_parser.add_argument(
+        "--emergency",
+        action="store_true",
+        help="Run emergency assessment: check if human oversight channels are reachable.",
+    )
+    status_parser.add_argument(
+        "--governance",
+        type=str,
+        default="governance.yaml",
+        help="Path to governance.yaml (default: governance.yaml).",
+    )
+    status_parser.add_argument(
+        "--format",
+        dest="output_format",
+        type=str,
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text).",
+    )
+
     return parser
 
 
@@ -250,6 +279,28 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Chain verification: {'PASS' if valid else 'FAIL'}")
         print(f"  {message}")
         return 0 if valid else 1
+
+    if args.command == "status":
+        gov_path = Path(args.governance)
+        if args.emergency:
+            result = assess_emergency(gov_path)
+
+            if args.output_format == "json":
+                print(json.dumps(result, indent=2))
+            else:
+                print(format_emergency_text(result))
+
+            # Exit code reflects governance state
+            if result["governance_intact"]:
+                return 0
+            elif result["human_oversight_available"]:
+                return 1  # degraded
+            else:
+                return 2  # emergency — no human oversight
+        else:
+            print("Use --emergency to run a full governance health check.")
+            print("Example: agent-shield status --emergency")
+            return 0
 
     return 0
 

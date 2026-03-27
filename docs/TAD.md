@@ -1,6 +1,6 @@
 # Technical Architecture Document: Agent Shield
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 **Dato:** 2026-03-27
 **Forfatter:** Jesca Martaeng, FluxAI
 **Repo:** https://github.com/fluxai-dk/agent-shield
@@ -194,7 +194,112 @@ agent-shield compliance  |  GDPR
 
 ---
 
-## 5. Dataflow
+## 5. Emergency Mode (Nyt lag — infrastruktur-beredskab)
+
+### 5.1 Trusselsmodel
+
+Når en virksomheds primære platform går ned, stopper AI-agenter **ikke** automatisk. De kører videre — uden monitoring, uden eskalationskanaler, uden human oversight. Dette er en direkte violation af:
+
+- **EU AI Act Art. 14** — human oversight skal være tilgængeligt
+- **EU AI Act Art. 9** — risikostyringssystemet skal være operationelt
+
+### 5.2 Kommando
+
+```
+$ agent-shield status --emergency --governance governance.yaml
+```
+
+### 5.3 Hvad den checker
+
+Læser `delegation.escalation` fra governance.yaml. Hver kanal kan have et `endpoint` felt:
+
+| Endpoint-type | Eksempel | Check-metode |
+|--------------|---------|--------------|
+| HTTP/HTTPS | `https://hooks.slack.com/...` | HTTP HEAD request |
+| TCP | `tcp://mattermost.internal:443` | TCP socket connect |
+| Proces | `process://rocketchat` | pgrep |
+| Fil/socket | `file:///var/run/escalation.sock` | Fil-eksistens + skrivbarhed |
+| (ingen) | — | Antaget utilgængelig |
+| `abort` | — | Altid tilgængelig (built-in) |
+
+### 5.4 Governance.yaml endpoint-konfiguration
+
+```yaml
+delegation:
+  escalation:
+    - channel: human_review
+      trigger: threshold_reached
+      endpoint: https://hooks.slack.com/services/T00/B00/xxx
+    - channel: backup_comms
+      trigger: primary_down
+      endpoint: https://rocketchat.company.com/api/v1/channels.list
+    - channel: abort
+      trigger: critical_violation
+```
+
+### 5.5 Exit codes
+
+| Exit | Status | Betydning |
+|------|--------|-----------|
+| 0 | NOMINAL | Alle oversight-kanaler operationelle |
+| 1 | DEGRADED | Nogle kanaler nede, oversight stadig mulig |
+| 2 | EMERGENCY | Alle human oversight-kanaler nede |
+
+### 5.6 Output eksempel (emergency)
+
+```
+agent-shield status --emergency
+========================================================
+  Timestamp:    2026-03-27T20:39:57+00:00
+  Governance:   governance.yaml
+  Fail mode:    closed
+
+  Escalation Channels
+  ----------------------------------------
+  [X] human_review         DOWN
+      endpoint: https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+      detail:   Unreachable: Not Found
+  [X] backup_comms         DOWN
+      endpoint: https://rocketchat.example.com/api/v1/channels.list
+      detail:   Unreachable: No address associated with hostname
+
+  Assessment
+  ----------------------------------------
+  Human oversight available:  NO
+  Governance intact:          NO
+  Action: EMERGENCY — all human oversight channels unreachable.
+          Switch to fail-closed. Halt all autonomous agents until
+          communication is restored.
+
+  Regulatory Impact
+  ----------------------------------------
+  EU AI Act Art. 9: AT RISK — governance prerequisites degraded
+  EU AI Act Art. 14: VIOLATION — human oversight unreachable
+========================================================
+```
+
+### 5.7 Integration med IT-beredskab
+
+Emergency mode bygger bro mellem AI-governance og IT-nødberedskab:
+
+```
+Primær platform (Teams/Slack) → NEDE
+        │
+        ▼
+agent-shield status --emergency → EMERGENCY (exit 2)
+        │
+        ▼
+Backup-platform (Rocket.Chat/Mattermost) → tjekkes automatisk
+        │
+        ├── UP   → DEGRADED (exit 1), agenter fortsætter med reduceret autonomi
+        └── DOWN → EMERGENCY (exit 2), alle agenter stoppes
+```
+
+Spørgsmålet "hvad gør vores agenter når Teams går ned?" har nu et svar.
+
+---
+
+## 6. Dataflow
 
 ### 5.1 Scan (statisk analyse)
 ```
@@ -243,6 +348,7 @@ $ agent-shield scan .
 | `agent-shield compliance --framework eu-ai-act` | EU AI Act compliance | Art. 12 coverage, Art. 14 status |
 | `agent-shield compliance --framework gdpr` | GDPR compliance | Art. 22 flags, Art. 35 flags |
 | `agent-shield verify` | Ledger-integritet | Chain PASS/FAIL |
+| `agent-shield status --emergency` | Escalation channel health check | NOMINAL/DEGRADED/EMERGENCY |
 
 Alle commands understøtter `--format json` for maskinlæsbar output.
 
@@ -256,17 +362,19 @@ Alle commands understøtter `--format json` for maskinlæsbar output.
 - **Drift detection** — score >0.3 markerer adfærdsafvigelse
 - **Governance status** — automatisk degradering ved uadresseret drift
 - **Zero cloud dependencies** — alt kører lokalt, ingen data forlader maskinen
+- **Emergency mode** — detekterer når eskalationskanaler er nede og anbefaler fail-closed
 
 ---
 
 ## 8. Integration med Airlock
 
 ```
-governance.yaml (Airlock)     → Definerer reglerne
-hooks/enforce.sh (Airlock)    → Håndhæver ved runtime (exit 0/2)
-report.py (Agent Shield)      → Logger hvad der skete
-governance-report.json        → Immutable audit trail
-agent-shield compliance       → Regulatory rapportering
+governance.yaml (Airlock)        → Definerer reglerne
+hooks/enforce.sh (Airlock)       → Håndhæver ved runtime (exit 0/2)
+report.py (Agent Shield)         → Logger hvad der skete
+governance-report.json           → Immutable audit trail
+agent-shield compliance          → Regulatory rapportering
+agent-shield status --emergency  → Er governance-forudsætningerne intakte?
 ```
 
 Airlock uden Agent Shield er en policy-dokument.
